@@ -30,11 +30,7 @@ module CliUtils
   def filter(results, &filter)
     return results unless filter
 
-    to_keep = []
-
-    results.each { |e| to_keep << e if filter.call(e) }
-
-    return to_keep
+    results.find_all { |e| filter.call(e) }
   end
 
   def create_options(target_name, collection, &desc)
