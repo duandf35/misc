@@ -14,30 +14,34 @@ module CliUtils
   #     export PROMPT_COMMAND="history -a; history -n"
   #
   def append_to_bash_history(cmd)
-    File.open(ENV['HOME'] + '/.bash_history', 'a') do |f|
-      f << cmd + "\n"
-    end
+    File.open(ENV['HOME'] + '/.bash_history', 'a') { |f| f << cmd + "\n" }
   end
 
-  # return true if field is in the targets
-  def create_filter(targets, field)
-    return nil if targets.nil? || targets.empty?
+  # filter will return true if element match any of the regexs
+  def create_filter(regexs)
+    return nil if regexs.nil? || regexs.empty?
 
     # /<regex>/i match pattern ignore case
-    return proc { |e| targets.index { |target| /#{target}/i =~ e[field] } }
+    proc { |e| regexs.index { |regex| /#{regex}/i =~ e } }
   end
 
-  def filter(results, &filter)
+  def filter(results, field = nil, &filter)
     return results unless filter
 
-    results.find_all { |e| filter.call(e) }
+    results.find_all do |e|
+      if field
+        filter.call(e[field])
+      else
+        filter.call(e)
+      end
+    end
   end
 
   def create_options(target_name, collection, &desc)
     prompt = "Select #{target_name}:\n"
 
     # 'unless collection' doesn't work since empty collection in ruby is truthy
-    if collection.nil? or collection.empty?
+    if collection.nil? || collection.empty?
       puts 'No option available!'
       exit(1)
     end
@@ -60,7 +64,7 @@ module CliUtils
       exit 1
     end
 
-    return collection[option_id.to_i]
+    collection[option_id.to_i]
   end
 
   # spawn(cmd)
