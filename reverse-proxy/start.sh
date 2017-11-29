@@ -6,7 +6,9 @@ shelldir=$(cd $(dirname $0) && pwd)
 
 os=$(uname)
 
-[ $os == 'Darwin' ] && host=$(ifconfig | grep -w 'inet' | grep -v '127.0.0.1' | awk '{ print $2 }')
+# sometimes multiple ips are returned, so use the 'grep -m 1' to take the first matched ip
+# TODO: find why
+[ $os == 'Darwin' ] && host=$(ifconfig | grep -w 'inet' | grep -m 1 -v '127.0.0.1' | awk '{ print $2 }')
 [ $os == 'Linux' ] && host=$(hostname -i)
 
 backend_port=8080
