@@ -10,20 +10,27 @@ def life_game(**kwargs):
     print(f"\nconfig: {kwargs}\n")
     time.sleep(1)
 
-    stage = __init(kwargs['size'], kwargs['init_percentage'])
+    file = kwargs['input_file']
+
+    if not file:
+        stage = __init(kwargs['size'], kwargs['init_percentage'])
+    else:
+        stage = __from_file(file)
 
     gen = 0
-    while gen <= kwargs['generation']:
+    while gen < kwargs['generation']:
         __display(stage, gen)
         __update(stage, kwargs['threshold'])
         gen += 1
         time.sleep(0.75)
+    __display(stage, gen)
+    __to_file(stage)
 
 
 def __init(stage_size, percentage):
     import random
 
-    stage = [[0] * stage_size for _ in range(stage_size)]
+    stage = [[0] * stage_size[0] for _ in range(stage_size[1])]
     for r in range(0, len(stage)):
         for c in range(0, len(stage[0])):
             if random.randint(0, 100) <= percentage:
@@ -72,20 +79,43 @@ def __display(stage, gen):
         print()
 
 
+def __from_file(file):
+    stage = []
+    with open(file, 'r') as f:
+        lines = f.readlines()
+        for line in lines:
+            stage.append([int(c) for c in list(line) if c != '\n'])
+    return stage
+
+
+def __to_file(stage):
+    from datetime import datetime
+
+    with open(f"output-{str(datetime.now().timestamp()).split('.')[0]}.txt", 'w') as f:
+        for row in stage:
+            for col in row:
+                f.write(str(col))
+            f.write('\n')
+
+
 if __name__ == '__main__':
     from sys import argv
 
-    size = 100
+    size_w = 100
+    size_h = 25
     threshold_lower = 2
     threshold_upper = 3
     generation = 20
     init_percentage = 15
+    input_file = None
 
     argv.pop(0)
     while argv:
         opt = argv.pop(0)
-        if opt == '-s':
-            size = int(argv.pop(0))
+        if opt == '-w':
+            size_w = int(argv.pop(0))
+        elif opt == 'h':
+            size_h = int(argv.pop(0))
         elif opt == '-l':
             if threshold_lower > 0:
                 threshold_lower = int(argv.pop(0))
@@ -96,8 +126,11 @@ if __name__ == '__main__':
             generation = int(argv.pop(0))
         elif opt == '-p':
             init_percentage = int(argv.pop(0))
+        elif opt == '-f':
+            input_file = argv.pop(0)
 
-    life_game(size=size,
+    life_game(size=(size_w, size_h),
               threshold=(threshold_lower, threshold_upper),
               generation=generation,
-              init_percentage=init_percentage)
+              init_percentage=init_percentage,
+              input_file=input_file)
