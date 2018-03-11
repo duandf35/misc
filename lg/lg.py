@@ -1,3 +1,6 @@
+#!/usr/bin/env python3
+
+
 def life_game(**kwargs):
     """
     Any live cell with fewer than two live neighbours dies, as if caused by underpopulation.
@@ -48,15 +51,19 @@ def __update(stage, live_threshold):
     :param stage:
     :return:
     """
-    for r in range(0, len(stage)):
-        for c in range(0, len(stage[0])):
-            neighbours = [(r - 1, c), (r - 1, c - 1), (r - 1, c + 1),
-                          (r, c - 1), (r, c + 1),
-                          (r + 1, c), (r + 1, c - 1), (r + 1, c + 1)]
-            live_count = len([valid_neighbour for valid_neighbour in neighbours if
-                              valid_neighbour[0] in range(0, len(stage)) and
-                              valid_neighbour[1] in range(0, len(stage[0])) and
-                              stage[valid_neighbour[0]][valid_neighbour[1]] in [1, 2]])
+    height = len(stage)
+    width = len(stage[0])
+    for r in range(0, height):
+        for c in range(0, width):
+            neighbours = []
+            for roff in range(-1, 2):
+                for coff in range(-1, 2):
+                    if roff == 0 and coff == 0:
+                        continue
+                    neighbours.append(((r + roff) % height, (c + coff) % width))
+
+            live_count = len([neighbour for neighbour in neighbours if
+                              stage[neighbour[0]][neighbour[1]] in [1, 2]])
 
             if stage[r][c] == 1 and live_count not in range(live_threshold[0], live_threshold[1] + 1):
                 # dying
