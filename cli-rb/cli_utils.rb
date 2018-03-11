@@ -1,8 +1,4 @@
-require_relative 'color'
-
 module CliUtils
-
-  module_function
 
   # `history` not work because 'history' is not an Unix executable file but
   # a built-in function of bash
@@ -40,16 +36,15 @@ module CliUtils
   def create_options(target_name, collection, &desc)
     prompt = "Select #{target_name}:\n"
 
-    # 'unless collection' doesn't work since empty collection in ruby is truthy
-    if collection.nil? || collection.empty?
-      puts 'No option available!'
-      exit(1)
-    end
-
-    return collection[0] if collection.length == 1
+    # empty array is truthy in ruby
+    raise 'No option available!' if collection.nil? || collection.empty?
 
     id = 0
+    option_hash = {}
     collection.each do |entry|
+      # if the collection is a hash then the entry would be an array
+      # with the key as the first element and the value as the second element
+      option_hash[id.to_s.to_sym] = entry
       prompt += "#{id}) "
       prompt += desc.call(entry)
       id += 1
@@ -59,12 +54,9 @@ module CliUtils
 
     option_id = gets.strip
 
-    if option_id !~ /\A\d+\z/ || collection[option_id.to_i].nil?
-      puts 'Invalid input!'
-      exit 1
-    end
+    raise 'Invalid input!' if option_id !~ /\A\d+\z/ || option_hash[option_id.to_s.to_sym].nil?
 
-    collection[option_id.to_i]
+    option_hash[option_id.to_s.to_sym]
   end
 
   # spawn(cmd)
@@ -80,7 +72,7 @@ module CliUtils
   # Process.exec(cmd)
   # will replace the current process by running the given command
   def exec(cmd)
-    puts Color.g(cmd)
+    puts cmd
 
     Process.exec(cmd)
   end

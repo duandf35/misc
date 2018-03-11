@@ -1,3 +1,5 @@
 .idea
 *.txt
 .DS_Store
+*.iml
+*.db
