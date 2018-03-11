@@ -84,6 +84,7 @@ class Roller:
         print(f'rolling dice {times}d{faces}, result: {result}')
         return result
 
+
 if __name__ == '__main__':
     from sys import argv, exit
 
