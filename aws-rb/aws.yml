@@ -1,0 +1,10 @@
+accounts:
+  - dev
+  - prod
+profiles:
+  dev:
+    name: default
+    ssh_key: ${dev.pem}
+  prod:
+    name: prod
+    ssh_key: ${prod.pem}
