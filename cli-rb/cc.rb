@@ -1,37 +1,26 @@
-# command node group
-class CGroup
-  attr_reader :command, :cnode
-
-  def initialize(command)
-    @command = command
-    @sub_group_hash = {}
-    @cnode = nil
-  end
-
-  def get_sub_group(group_command)
-    @sub_group_hash[group_command]
-  end
-
-  def add_node(node_command, &node_action)
-    @cnode = CNode.new(node_command, &node_action)
-  end
-
-  def add_sub_group(sub_group_command)
-    @sub_group_hash[sub_group_command] = CGroup.new(sub_group_command) unless @sub_group_hash.key?(sub_group_command)
-    @sub_group_hash[sub_group_command]
-  end
-end
-
-# command node
+# command node node
 class CNode
-  attr_reader :command
+  attr_reader :command, :sub_node_hash, :action
 
-  def initialize(command, &action)
+  def initialize(command = nil)
     @command = command
+    @sub_node_hash = {}
+  end
+
+  def get_sub_node(node_command)
+    @sub_node_hash[node_command]
+  end
+
+  def add_sub_node(sub_node_command)
+    @sub_node_hash[sub_node_command] = CNode.new(sub_node_command) unless @sub_node_hash.key?(sub_node_command)
+    @sub_node_hash[sub_node_command]
+  end
+
+  def add_action(&action)
     @action = action
   end
 
-  def apply(arguments)
+  def apply_action(arguments)
     @action.call(*arguments)
   end
 end
@@ -39,20 +28,29 @@ end
 # command tree
 class CTree
   def initialize
-    @root_group = CGroup.new('')
+    @root_node = CNode.new
   end
 
-  def define(group_commands, node_command, &node_action)
-    if group_commands.is_a?(Array)
-      sg = @root_group.add_sub_group(group_commands.pop)
-      sg = sg.add_sub_group(group_commands.pop) while group_commands.any?
-      sg.add_node(node_command, &node_action)
-    elsif group_commands && !group_commands.empty?
-      sg = @root_group.add_sub_group(group_commands)
-      sg.add_node(node_command, &node_action)
+  def define(node_command, &action)
+    if node_command.is_a?(Array)
+      sn = @root_node.add_sub_node(node_command.shift)
+      sn = sn.add_sub_node(node_command.shift) while node_command.any?
+      sn.add_action(&action)
+    elsif node_command && !node_command.empty?
+      sn = @root_node.add_sub_node(node_command)
+      sn.add_action(&action)
     else
-      @root_group.add_node(node_command, &node_action)
+      @root_node.add_action(&action)
     end
+  end
+
+  def traversal(output = '', indent = ' ', node = @root_node)
+    output += indent * 1 + node.command + "\n" if node.command
+    while node.sub_node_hash.any?
+      _, sn = node.sub_node_hash.shift
+      output = traversal(output, indent * 2, sn)
+    end
+    output
   end
 
   def exec(inputs)
@@ -62,25 +60,7 @@ class CTree
 
   private
 
-  def parse(inputs, pg = @root_group, call_stack = [])
-    if inputs.empty?
-      call_stack << proc { pg.cnode.apply } if pg.cnode
-      return call_stack
-    end
-
-    sg = pg.get_sub_group(inputs.first)
-    arguments = [] << inputs.pop while inputs.any? && !pg.get_sub_group(inputs.first)
-
-    # found sub group, continue searching node
-    if sg
-      inputs.pop
-      parse(arguments, sg, call_stack)
-    end
-
-    # not found sub group, invoking node of current group
-    call_stack << proc { pg.cnode.apply(arguments) } if pg.cnode
-    parse(inputs, pg, call_stack) if inputs.any?
-
-    call_stack
+  def parse(inputs, node = @root_node, call_stack = [])
+    
   end
 end
