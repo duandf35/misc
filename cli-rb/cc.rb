@@ -61,6 +61,6 @@ class CTree
   private
 
   def parse(inputs, node = @root_node, call_stack = [])
-    
+        
   end
 end
