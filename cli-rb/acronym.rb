@@ -14,7 +14,7 @@ def list
 end
 
 def find(acronym)
-  definition = @db.get(acronym)
+  definition = @db.get(acronym) || @db.get(acronym.upcase)
   if definition
     puts "#{acronym}\n#{definition.split(',').join("\n")}"
   else
